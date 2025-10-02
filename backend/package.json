@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "docker:up": "cd .. && docker-compose up -d mongo",
+    "docker:down": "cd .. && docker-compose down",
+    "docker:logs": "cd .. && docker-compose logs -f",
+    "docker:clean": "cd .. && docker-compose down -v"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.0",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.1"
+  }
+}
