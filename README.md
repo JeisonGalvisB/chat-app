@@ -472,30 +472,11 @@ Contributions are welcome! Please follow these steps:
 - Update README if adding features
 - Test thoroughly before submitting PR
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
-- **Your Name** - Initial work
+- **Jeison Galvis** - Initial work
 
-## 🙏 Acknowledgments
-
-- Socket.IO team for amazing real-time framework
-- MongoDB team for robust database
-- React team for excellent UI library
-- Vite team for lightning-fast tooling
-- Express.js community
-- Open source community
-
-## 📞 Support
-
-For issues, questions, or suggestions:
-
-- 🐛 [Open an issue](https://github.com/yourusername/chat-app/issues)
-- 💬 [Start a discussion](https://github.com/yourusername/chat-app/discussions)
-- 📧 Email: your.email@example.com
 
 ## 🌟 Star History
 
