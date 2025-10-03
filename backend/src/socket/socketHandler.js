@@ -2,20 +2,20 @@ import { SOCKET_EVENTS } from '../config/constants.js';
 import userService from '../services/userService.js';
 import messageService from '../services/messageService.js';
 
-// Mapa de usuarios conectados (nickname -> socketId)
+// Map of connected users (nickname -> socketId)
 const connectedUsers = new Map();
 
 export function initializeSocket(io) {
 
     io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
-        console.log(`🔌 Nuevo cliente conectado: ${socket.id}`);
+        console.log(`🔌 New client connected: ${socket.id}`);
 
         // ========================================
-        // EVENTO: Usuario se une al chat
+        // EVENT: User joins chat
         // ========================================
         socket.on(SOCKET_EVENTS.USER_JOIN, async ({ nickname }, callback) => {
             try {
-                // Validar nickname
+                // Validate nickname
                 const validation = userService.validateNickname(nickname);
                 if (!validation.valid) {
                     return callback({
@@ -26,37 +26,37 @@ export function initializeSocket(io) {
 
                 const validNickname = validation.nickname;
 
-                // Verificar si ya está conectado en memoria (sesión activa)
+                // Check if already connected in memory (active session)
                 if (connectedUsers.has(validNickname)) {
                     return callback({
                         success: false,
-                        error: 'Este nickname ya está en uso. Por favor elige otro.'
+                        error: 'This nickname is already in use. Please choose another.'
                     });
                 }
 
-                // Verificar si existe en DB y está realmente online con otro socket
+                // Check if exists in DB and is really online with another socket
                 const existingUser = await userService.getUserByNickname(validNickname);
                 if (existingUser && existingUser.isOnline && existingUser.socketId !== socket.id) {
-                    // Usuario existe en DB como online pero NO está en memoria
-                    // Esto puede pasar si el servidor se reinició pero la DB no se limpió
-                    console.log(`⚠️  Usuario "${validNickname}" estaba marcado como online en DB pero no en memoria. Limpiando...`);
-                    // Permitir reconexión actualizando el socketId
+                    // User exists in DB as online but NOT in memory
+                    // This can happen if server restarted but DB wasn't cleaned
+                    console.log(`⚠️  User "${validNickname}" was marked as online in DB but not in memory. Cleaning...`);
+                    // Allow reconnection by updating socketId
                 }
 
-                // Crear/actualizar usuario en DB (esto maneja reconexiones)
+                // Create/update user in DB (this handles reconnections)
                 const user = await userService.createOrUpdateUser(validNickname, socket.id);
 
-                // Guardar en memoria
+                // Save in memory
                 connectedUsers.set(validNickname, socket.id);
                 socket.nickname = validNickname;
 
-                // Obtener lista de usuarios online
+                // Get online users list
                 const onlineUsers = Array.from(connectedUsers.keys());
 
-                // Notificar a TODOS los clientes la lista actualizada
+                // Notify ALL clients with updated list
                 io.emit(SOCKET_EVENTS.USERS_LIST, onlineUsers);
 
-                // Confirmar al usuario que se unió exitosamente
+                // Confirm user joined successfully
                 callback({
                     success: true,
                     user: {
@@ -66,34 +66,34 @@ export function initializeSocket(io) {
                     onlineUsers
                 });
 
-                console.log(`✅ Usuario "${validNickname}" se unió al chat. Total online: ${onlineUsers.length}`);
+                console.log(`✅ User "${validNickname}" joined chat. Total online: ${onlineUsers.length}`);
 
             } catch (error) {
-                console.error('❌ Error en user:join:', error);
+                console.error('❌ Error in user:join:', error);
                 callback({
                     success: false,
-                    error: error.message || 'Error al unirse al chat'
+                    error: error.message || 'Error joining chat'
                 });
             }
         });
 
         // ========================================
-        // EVENTO: Enviar mensaje privado
+        // EVENT: Send private message
         // ========================================
         socket.on(SOCKET_EVENTS.MESSAGE_SEND, async (data, callback) => {
             try {
                 const { to, content, messageType, fileUrl, fileName, fileSize, mimeType, location } = data;
                 const from = socket.nickname;
 
-                // Validar autenticación
+                // Validate authentication
                 if (!from) {
                     return callback({
                         success: false,
-                        error: 'Debes iniciar sesión primero'
+                        error: 'You must log in first'
                     });
                 }
 
-                // Validar contenido según tipo de mensaje
+                // Validate content based on message type
                 if (messageType === 'text') {
                     const validation = messageService.validateMessage(content);
                     if (!validation.valid) {
@@ -104,15 +104,15 @@ export function initializeSocket(io) {
                     }
                 }
 
-                // Validar destinatario
+                // Validate recipient
                 if (!connectedUsers.has(to)) {
                     return callback({
                         success: false,
-                        error: 'El usuario destinatario no está conectado'
+                        error: 'The recipient user is not connected'
                     });
                 }
 
-                // Crear objeto mensaje
+                // Create message object
                 const messageData = {
                     from,
                     to,
@@ -120,7 +120,7 @@ export function initializeSocket(io) {
                     timestamp: new Date()
                 };
 
-                // Agregar campos según tipo de mensaje
+                // Add fields based on message type
                 if (messageType === 'text') {
                     messageData.content = content;
                 } else if (['image', 'file', 'audio'].includes(messageType)) {
@@ -128,34 +128,34 @@ export function initializeSocket(io) {
                     messageData.fileName = fileName;
                     messageData.fileSize = fileSize;
                     messageData.mimeType = mimeType;
-                    messageData.content = fileName; // Usar filename como content para búsquedas
+                    messageData.content = fileName; // Use filename as content for searches
                 } else if (messageType === 'location') {
                     messageData.location = location;
-                    messageData.content = location.address || 'Ubicación compartida';
+                    messageData.content = location.address || 'Shared location';
                 }
 
-                // Guardar en base de datos
+                // Save to database
                 const savedMessage = await messageService.saveMessage(messageData);
 
-                // Obtener socketId del destinatario
+                // Get recipient's socketId
                 const recipientSocketId = connectedUsers.get(to);
 
                 if (recipientSocketId) {
-                    // Enviar mensaje al destinatario
+                    // Send message to recipient
                     io.to(recipientSocketId).emit(SOCKET_EVENTS.MESSAGE_RECEIVED, savedMessage);
 
-                    // Enviar notificación visual
+                    // Send visual notification
                     let preview = '';
                     if (messageType === 'text') {
                         preview = content.substring(0, 30) + (content.length > 30 ? '...' : '');
                     } else if (messageType === 'image') {
-                        preview = '📷 Imagen';
+                        preview = '📷 Image';
                     } else if (messageType === 'audio') {
                         preview = '🎵 Audio';
                     } else if (messageType === 'file') {
-                        preview = '📎 Archivo';
+                        preview = '📎 File';
                     } else if (messageType === 'location') {
-                        preview = '📍 Ubicación';
+                        preview = '📍 Location';
                     }
 
                     io.to(recipientSocketId).emit(SOCKET_EVENTS.NOTIFICATION_NEW_MESSAGE, {
@@ -165,26 +165,26 @@ export function initializeSocket(io) {
                         timestamp: messageData.timestamp
                     });
 
-                    console.log(`📨 Mensaje de "${from}" a "${to}": ${preview}`);
+                    console.log(`📨 Message from "${from}" to "${to}": ${preview}`);
                 }
 
-                // Confirmar al emisor
+                // Confirm to sender
                 callback({
                     success: true,
                     message: savedMessage
                 });
 
             } catch (error) {
-                console.error('❌ Error en message:send:', error);
+                console.error('❌ Error in message:send:', error);
                 callback({
                     success: false,
-                    error: error.message || 'Error al enviar mensaje'
+                    error: error.message || 'Error sending message'
                 });
             }
         });
 
         // ========================================
-        // EVENTO: Cargar historial de mensajes
+        // EVENT: Load message history
         // ========================================
         socket.on(SOCKET_EVENTS.MESSAGES_LOAD, async ({ targetUser }, callback) => {
             try {
@@ -193,36 +193,36 @@ export function initializeSocket(io) {
                 if (!from) {
                     return callback({
                         success: false,
-                        error: 'No autenticado'
+                        error: 'Not authenticated'
                     });
                 }
 
-                // Obtener mensajes de la BD
+                // Get messages from DB
                 const messages = await messageService.getMessagesBetweenUsers(
                     from,
                     targetUser,
-                    100 // límite de mensajes
+                    100 // message limit
                 );
 
-                // Devolver en orden cronológico (más antiguo primero)
+                // Return in chronological order (oldest first)
                 callback({
                     success: true,
                     messages: messages.reverse()
                 });
 
-                console.log(`📂 Cargados ${messages.length} mensajes entre "${from}" y "${targetUser}"`);
+                console.log(`📂 Loaded ${messages.length} messages between "${from}" and "${targetUser}"`);
 
             } catch (error) {
-                console.error('❌ Error en messages:load:', error);
+                console.error('❌ Error in messages:load:', error);
                 callback({
                     success: false,
-                    error: error.message || 'Error al cargar mensajes'
+                    error: error.message || 'Error loading messages'
                 });
             }
         });
 
         // ========================================
-        // EVENTO: Marcar mensajes como leídos
+        // EVENT: Mark messages as read
         // ========================================
         socket.on(SOCKET_EVENTS.MESSAGES_MARK_READ, async ({ from }) => {
             try {
@@ -233,43 +233,43 @@ export function initializeSocket(io) {
                 const count = await messageService.markAsRead(from, to);
 
                 if (count > 0) {
-                    console.log(`✓ Marcados ${count} mensajes como leídos (de "${from}" a "${to}")`);
+                    console.log(`✓ Marked ${count} messages as read (from "${from}" to "${to}")`);
                 }
 
             } catch (error) {
-                console.error('❌ Error en messages:mark_read:', error);
+                console.error('❌ Error in messages:mark_read:', error);
             }
         });
 
         // ========================================
-        // EVENTO: Desconexión
+        // EVENT: Disconnection
         // ========================================
         socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
             try {
                 const nickname = socket.nickname;
 
                 if (nickname) {
-                    // Remover de memoria
+                    // Remove from memory
                     connectedUsers.delete(nickname);
 
-                    // Actualizar en DB
+                    // Update in DB
                     await userService.setUserOffline(socket.id);
 
-                    // Notificar a todos la lista actualizada
+                    // Notify everyone with updated list
                     const onlineUsers = Array.from(connectedUsers.keys());
                     io.emit(SOCKET_EVENTS.USERS_LIST, onlineUsers);
 
-                    console.log(`👋 Usuario "${nickname}" se desconectó. Online: ${onlineUsers.length}`);
+                    console.log(`👋 User "${nickname}" disconnected. Online: ${onlineUsers.length}`);
                 } else {
-                    console.log(`👋 Cliente ${socket.id} se desconectó (sin autenticar)`);
+                    console.log(`👋 Client ${socket.id} disconnected (not authenticated)`);
                 }
             } catch (error) {
-                console.error('❌ Error en disconnect:', error);
+                console.error('❌ Error in disconnect:', error);
             }
         });
 
         // ========================================
-        // MANEJO DE ERRORES
+        // ERROR HANDLING
         // ========================================
         socket.on(SOCKET_EVENTS.ERROR, (error) => {
             console.error('❌ Socket error:', error);
@@ -277,11 +277,11 @@ export function initializeSocket(io) {
 
     });
 
-    // Log cuando el servidor Socket.IO está listo
-    console.log('🔌 Socket.IO inicializado correctamente');
+    // Log when Socket.IO server is ready
+    console.log('🔌 Socket.IO initialized successfully');
 }
 
-// Función auxiliar para obtener usuarios conectados (útil para debugging)
+// Helper function to get connected users (useful for debugging)
 export function getConnectedUsers() {
     return Array.from(connectedUsers.entries()).map(([nickname, socketId]) => ({
         nickname,

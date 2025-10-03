@@ -6,7 +6,7 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Crear directorios si no existen
+// Create directories if they don't exist
 const uploadDir = path.join(__dirname, '../../uploads');
 const dirs = ['images', 'files', 'audio'];
 
@@ -17,7 +17,7 @@ dirs.forEach(dir => {
     }
 });
 
-// Configurar almacenamiento
+// Configure storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const mimeType = file.mimetype.split('/')[0];
@@ -41,10 +41,10 @@ const storage = multer.diskStorage({
     }
 });
 
-// Filtro de archivos
+// File filter
 const fileFilter = (req, file, cb) => {
     const allowedTypes = [
-        // Imágenes
+        // Images
         'image/jpeg',
         'image/jpg',
         'image/png',
@@ -56,7 +56,7 @@ const fileFilter = (req, file, cb) => {
         'audio/wav',
         'audio/ogg',
         'audio/webm',
-        // Archivos
+        // Files
         'application/pdf',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -70,11 +70,11 @@ const fileFilter = (req, file, cb) => {
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}`), false);
+        cb(new Error(`File type not allowed: ${file.mimetype}`), false);
     }
 };
 
-// Configurar multer
+// Configure multer
 const upload = multer({
     storage,
     fileFilter,

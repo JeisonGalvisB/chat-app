@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 const messageSchema = new mongoose.Schema({
     from: {
         type: String,
-        required: [true, 'El remitente es requerido'],
+        required: [true, 'Sender is required'],
         ref: 'User'
     },
     to: {
         type: String,
-        required: [true, 'El destinatario es requerido'],
+        required: [true, 'Recipient is required'],
         ref: 'User'
     },
     messageType: {
@@ -23,8 +23,8 @@ const messageSchema = new mongoose.Schema({
             return this.messageType === 'text' || this.messageType === 'location';
         },
         trim: true,
-        minlength: [1, 'El mensaje no puede estar vacío'],
-        maxlength: [1000, 'El mensaje es demasiado largo']
+        minlength: [1, 'Message cannot be empty'],
+        maxlength: [1000, 'Message is too long']
     },
     fileUrl: {
         type: String,
@@ -59,7 +59,7 @@ const messageSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Índice compuesto para búsquedas eficientes de conversaciones
+// Compound index for efficient conversation searches
 messageSchema.index({ from: 1, to: 1, timestamp: -1 });
 messageSchema.index({ to: 1, isRead: 1 });
 

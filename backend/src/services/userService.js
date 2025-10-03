@@ -2,7 +2,7 @@ import User from '../models/User.js';
 
 class UserService {
     /**
-     * Crear o actualizar usuario
+     * Create or update user
      */
     async createOrUpdateUser(nickname, socketId) {
         try {
@@ -23,14 +23,14 @@ class UserService {
             return user;
         } catch (error) {
             if (error.code === 11000) {
-                throw new Error('El nickname ya está en uso');
+                throw new Error('The nickname is already in use');
             }
-            throw new Error(`Error al crear usuario: ${error.message}`);
+            throw new Error(`Error creating user: ${error.message}`);
         }
     }
 
     /**
-     * Obtener todos los usuarios online
+     * Get all online users
      */
     async getOnlineUsers() {
         try {
@@ -40,34 +40,34 @@ class UserService {
 
             return users;
         } catch (error) {
-            throw new Error(`Error al obtener usuarios: ${error.message}`);
+            throw new Error(`Error getting users: ${error.message}`);
         }
     }
 
     /**
-     * Buscar usuario por socketId
+     * Find user by socketId
      */
     async getUserBySocketId(socketId) {
         try {
             return await User.findOne({ socketId }).lean();
         } catch (error) {
-            throw new Error(`Error al buscar usuario: ${error.message}`);
+            throw new Error(`Error finding user: ${error.message}`);
         }
     }
 
     /**
-     * Buscar usuario por nickname
+     * Find user by nickname
      */
     async getUserByNickname(nickname) {
         try {
             return await User.findOne({ nickname }).lean();
         } catch (error) {
-            throw new Error(`Error al buscar usuario: ${error.message}`);
+            throw new Error(`Error finding user: ${error.message}`);
         }
     }
 
     /**
-     * Marcar usuario como offline
+     * Mark user as offline
      */
     async setUserOffline(socketId) {
         try {
@@ -76,19 +76,19 @@ class UserService {
                 {
                     isOnline: false,
                     lastSeen: new Date(),
-                    socketId: null // Limpiar socketId para permitir reconexión
+                    socketId: null // Clear socketId to allow reconnection
                 },
                 { new: true }
             );
 
             return user;
         } catch (error) {
-            throw new Error(`Error al desconectar usuario: ${error.message}`);
+            throw new Error(`Error disconnecting user: ${error.message}`);
         }
     }
 
     /**
-     * Marcar usuario como offline por nickname
+     * Mark user as offline by nickname
      */
     async setUserOfflineByNickname(nickname) {
         try {
@@ -104,12 +104,12 @@ class UserService {
 
             return user;
         } catch (error) {
-            throw new Error(`Error al desconectar usuario: ${error.message}`);
+            throw new Error(`Error disconnecting user: ${error.message}`);
         }
     }
 
     /**
-     * Limpiar usuarios offline al iniciar el servidor
+     * Clean up offline users when starting the server
      */
     async cleanupOfflineUsers() {
         try {
@@ -118,16 +118,16 @@ class UserService {
                 { socketId: null }
             );
 
-            console.log(`🧹 Limpieza de usuarios offline: ${result.modifiedCount} registros actualizados`);
+            console.log(`🧹 Offline user cleanup: ${result.modifiedCount} records updated`);
             return result;
         } catch (error) {
-            console.error('❌ Error al limpiar usuarios offline:', error);
-            throw new Error(`Error al limpiar usuarios: ${error.message}`);
+            console.error('❌ Error cleaning offline users:', error);
+            throw new Error(`Error cleaning users: ${error.message}`);
         }
     }
 
     /**
-     * Marcar todos los usuarios como offline (útil al reiniciar servidor)
+     * Mark all users as offline (useful when restarting server)
      */
     async setAllUsersOffline() {
         try {
@@ -140,34 +140,34 @@ class UserService {
                 }
             );
 
-            console.log(`🔄 Todos los usuarios marcados como offline: ${result.modifiedCount} usuarios`);
+            console.log(`🔄 All users marked as offline: ${result.modifiedCount} users`);
             return result;
         } catch (error) {
-            console.error('❌ Error al marcar usuarios offline:', error);
-            throw new Error(`Error al actualizar usuarios: ${error.message}`);
+            console.error('❌ Error marking users offline:', error);
+            throw new Error(`Error updating users: ${error.message}`);
         }
     }
 
     /**
-     * Validar nickname
+     * Validate nickname
      */
     validateNickname(nickname) {
         if (!nickname || typeof nickname !== 'string') {
-            return { valid: false, error: 'El nickname es requerido' };
+            return { valid: false, error: 'Nickname is required' };
         }
 
         const trimmedNick = nickname.trim();
 
         if (trimmedNick.length < 3) {
-            return { valid: false, error: 'El nickname debe tener al menos 3 caracteres' };
+            return { valid: false, error: 'Nickname must be at least 3 characters' };
         }
 
         if (trimmedNick.length > 20) {
-            return { valid: false, error: 'El nickname no puede tener más de 20 caracteres' };
+            return { valid: false, error: 'Nickname cannot be more than 20 characters' };
         }
 
         if (!/^[a-zA-Z0-9_]+$/.test(trimmedNick)) {
-            return { valid: false, error: 'El nickname solo puede contener letras, números y guiones bajos' };
+            return { valid: false, error: 'Nickname can only contain letters, numbers and underscores' };
         }
 
         return { valid: true, nickname: trimmedNick };

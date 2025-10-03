@@ -6,7 +6,7 @@ const SocketContext = createContext()
 export const useSocket = () => {
   const context = useContext(SocketContext)
   if (!context) {
-    throw new Error('useSocket debe usarse dentro de un SocketProvider')
+    throw new Error('useSocket must be used within a SocketProvider')
   }
   return context
 }
@@ -25,22 +25,22 @@ export const SocketProvider = ({ children }) => {
     })
 
     newSocket.on('connect', () => {
-      console.log('✅ Conectado al servidor Socket.IO')
+      console.log('✅ Connected to Socket.IO server')
       setConnected(true)
     })
 
     newSocket.on('disconnect', () => {
-      console.log('❌ Desconectado del servidor')
+      console.log('❌ Disconnected from server')
       setConnected(false)
     })
 
     newSocket.on('users:list', (users) => {
-      console.log('📋 Lista de usuarios actualizada:', users)
+      console.log('📋 User list updated:', users)
       setOnlineUsers(users)
     })
 
     newSocket.on('notification:new_message', (notification) => {
-      console.log('🔔 Nueva notificación de mensaje:', notification)
+      console.log('🔔 New message notification:', notification)
       const { from } = notification
       setUnreadMessages(prev => ({
         ...prev,
@@ -49,7 +49,7 @@ export const SocketProvider = ({ children }) => {
     })
 
     newSocket.on('connect_error', (error) => {
-      console.error('Error de conexión:', error)
+      console.error('Connection error:', error)
       setConnected(false)
     })
 
@@ -63,7 +63,7 @@ export const SocketProvider = ({ children }) => {
   const joinChat = (nickname) => {
     return new Promise((resolve, reject) => {
       if (!socket) {
-        reject(new Error('Socket no inicializado'))
+        reject(new Error('Socket not initialized'))
         return
       }
 
@@ -80,11 +80,11 @@ export const SocketProvider = ({ children }) => {
   const sendMessage = (to, messageData) => {
     return new Promise((resolve, reject) => {
       if (!socket) {
-        reject(new Error('Socket no inicializado'))
+        reject(new Error('Socket not initialized'))
         return
       }
 
-      // Convertir string simple a objeto si es necesario (compatibilidad)
+      // Convert simple string to object if necessary (compatibility)
       const data = typeof messageData === 'string'
         ? { to, content: messageData, messageType: 'text' }
         : { to, ...messageData }
@@ -113,19 +113,19 @@ export const SocketProvider = ({ children }) => {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error || 'Error al subir archivo')
+        throw new Error(result.error || 'Error uploading file')
       }
 
       return result.file
     } catch (error) {
-      throw new Error(error.message || 'Error al subir archivo')
+      throw new Error(error.message || 'Error uploading file')
     }
   }
 
   const loadMessages = (targetUser) => {
     return new Promise((resolve, reject) => {
       if (!socket) {
-        reject(new Error('Socket no inicializado'))
+        reject(new Error('Socket not initialized'))
         return
       }
 
@@ -142,7 +142,7 @@ export const SocketProvider = ({ children }) => {
   const markAsRead = (from) => {
     if (!socket) return
     socket.emit('messages:mark_read', { from })
-    // Limpiar notificaciones no leídas de este usuario
+    // Clear unread notifications from this user
     clearUnreadMessages(from)
   }
 

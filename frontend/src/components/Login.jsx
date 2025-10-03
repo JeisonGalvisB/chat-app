@@ -13,12 +13,12 @@ const Login = ({ onLogin }) => {
     setError('')
 
     if (!nickname.trim()) {
-      setError('Por favor ingresa un nickname')
+      setError('Please enter a nickname')
       return
     }
 
     if (!connected) {
-      setError('No hay conexión con el servidor')
+      setError('No connection to server')
       return
     }
 
@@ -26,10 +26,10 @@ const Login = ({ onLogin }) => {
 
     try {
       const response = await joinChat(nickname.trim())
-      console.log('Login exitoso:', response)
+      console.log('Login successful:', response)
       onLogin(response.user.nickname)
     } catch (err) {
-      setError(err.message || 'Error al unirse al chat')
+      setError(err.message || 'Error joining chat')
       setLoading(false)
     }
   }
@@ -40,7 +40,7 @@ const Login = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-card">
         <h1>💬 Chat App</h1>
-        <p className="subtitle">Chat en tiempo real con Socket.IO</p>
+        <p className="subtitle">Real-time chat with Socket.IO</p>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -50,12 +50,12 @@ const Login = ({ onLogin }) => {
               id="nickname"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="Elige tu nombre de usuario"
+              placeholder="Choose your username"
               disabled={loading}
               autoFocus
               maxLength={20}
             />
-            <small>3-20 caracteres (letras, números y guiones bajos)</small>
+            <small>3-20 characters (letters, numbers and underscores)</small>
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -65,11 +65,11 @@ const Login = ({ onLogin }) => {
             className="btn-primary"
             disabled={loading || !connected}
           >
-            {loading ? 'Uniéndose...' : 'Unirse al Chat'}
+            {loading ? 'Joining...' : 'Join Chat'}
           </button>
 
           <div className={'connection-status ' + statusClass}>
-            {connected ? '🟢 Conectado' : '🔴 Desconectado'}
+            {connected ? '🟢 Connected' : '🔴 Disconnected'}
           </div>
         </form>
       </div>

@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
     nickname: {
         type: String,
-        required: [true, 'El nickname es requerido'],
+        required: [true, 'Nickname is required'],
         unique: true,
         trim: true,
-        minlength: [3, 'El nickname debe tener al menos 3 caracteres'],
-        maxlength: [20, 'El nickname no puede tener más de 20 caracteres'],
-        match: [/^[a-zA-Z0-9_]+$/, 'El nickname solo puede contener letras, números y guiones bajos']
+        minlength: [3, 'Nickname must be at least 3 characters'],
+        maxlength: [20, 'Nickname cannot be more than 20 characters'],
+        match: [/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers and underscores']
     },
     socketId: {
         type: String,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Índice para búsquedas rápidas
+// Index for fast searches
 userSchema.index({ nickname: 1 });
 userSchema.index({ socketId: 1 });
 

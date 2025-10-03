@@ -2,19 +2,19 @@ import Message from '../models/Message.js';
 
 class MessageService {
     /**
-     * Guardar mensaje
+     * Save message
      */
     async saveMessage(messageData) {
         try {
             const message = new Message(messageData);
             return await message.save();
         } catch (error) {
-            throw new Error(`Error al guardar mensaje: ${error.message}`);
+            throw new Error(`Error saving message: ${error.message}`);
         }
     }
 
     /**
-     * Obtener mensajes entre dos usuarios
+     * Get messages between two users
      */
     async getMessagesBetweenUsers(user1, user2, limit = 50) {
         try {
@@ -30,12 +30,12 @@ class MessageService {
 
             return messages;
         } catch (error) {
-            throw new Error(`Error al obtener mensajes: ${error.message}`);
+            throw new Error(`Error getting messages: ${error.message}`);
         }
     }
 
     /**
-     * Marcar mensajes como leídos
+     * Mark messages as read
      */
     async markAsRead(from, to) {
         try {
@@ -46,37 +46,37 @@ class MessageService {
 
             return result.modifiedCount;
         } catch (error) {
-            throw new Error(`Error al marcar mensajes: ${error.message}`);
+            throw new Error(`Error marking messages: ${error.message}`);
         }
     }
 
     /**
-     * Obtener número de mensajes no leídos
+     * Get number of unread messages
      */
     async getUnreadCount(to) {
         try {
             return await Message.countDocuments({ to, isRead: false });
         } catch (error) {
-            throw new Error(`Error al contar mensajes: ${error.message}`);
+            throw new Error(`Error counting messages: ${error.message}`);
         }
     }
 
     /**
-     * Validar contenido del mensaje
+     * Validate message content
      */
     validateMessage(content) {
         if (!content || typeof content !== 'string') {
-            return { valid: false, error: 'El mensaje es requerido' };
+            return { valid: false, error: 'Message is required' };
         }
 
         const trimmedContent = content.trim();
 
         if (trimmedContent.length < 1) {
-            return { valid: false, error: 'El mensaje no puede estar vacío' };
+            return { valid: false, error: 'Message cannot be empty' };
         }
 
         if (trimmedContent.length > 1000) {
-            return { valid: false, error: 'El mensaje es demasiado largo (máx. 1000 caracteres)' };
+            return { valid: false, error: 'Message is too long (max. 1000 characters)' };
         }
 
         return { valid: true, content: trimmedContent };

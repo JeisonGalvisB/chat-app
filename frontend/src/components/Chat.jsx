@@ -15,7 +15,7 @@ const Chat = ({ currentUser, onLogout }) => {
   }
 
   const handleLogout = () => {
-    if (window.confirm('¿Estás seguro que deseas salir?')) {
+    if (window.confirm('Are you sure you want to logout?')) {
       onLogout()
     }
   }
@@ -27,7 +27,7 @@ const Chat = ({ currentUser, onLogout }) => {
         <div className="user-info">
           <span className="current-user">{currentUser}</span>
           <button onClick={handleLogout} className="btn-logout">
-            Salir
+            Logout
           </button>
         </div>
       </div>
@@ -47,8 +47,8 @@ const Chat = ({ currentUser, onLogout }) => {
             />
           ) : (
             <div className="no-chat-selected">
-              <p>👈 Selecciona un usuario para comenzar a chatear</p>
-              <small>{availableUsers.length} usuarios online</small>
+              <p>👈 Select a user to start chatting</p>
+              <small>{availableUsers.length} users online</small>
             </div>
           )}
         </div>

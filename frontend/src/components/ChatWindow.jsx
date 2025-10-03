@@ -24,10 +24,10 @@ const ChatWindow = ({ currentUser, targetUser }) => {
         const msgs = await loadMessages(targetUser)
         setMessages(msgs)
         markAsRead(targetUser)
-        clearUnreadMessages(targetUser) // Limpiar notificaciones al abrir chat
+        clearUnreadMessages(targetUser) // Clear notifications when opening chat
       } catch (err) {
-        console.error('Error al cargar mensajes:', err)
-        setError('No se pudieron cargar los mensajes')
+        console.error('Error loading messages:', err)
+        setError('Could not load messages')
       } finally {
         setLoading(false)
       }
@@ -43,6 +43,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
       if (message.from === targetUser) {
         setMessages(prev => [...prev, message])
         markAsRead(targetUser)
+        clearUnreadMessages(targetUser) // Clear notifications when receiving message
         scrollToBottom()
       }
     }
@@ -84,7 +85,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
         prev.map(msg => msg._id === tempMessage._id ? { ...savedMessage, temp: false } : msg)
       )
     } catch (err) {
-      setError(err.message || 'Error al enviar mensaje')
+      setError(err.message || 'Error sending message')
       setMessages(prev => prev.filter(msg => msg._id !== tempMessage._id))
       setNewMessage(content)
     }
@@ -103,10 +104,10 @@ const ChatWindow = ({ currentUser, targetUser }) => {
       setUploading(true)
       setError('')
 
-      // Subir archivo al servidor
+      // Upload file to server
       const uploadedFile = await uploadFile(file)
 
-      // Crear mensaje temporal con preview
+      // Create temporary message with preview
       const tempMessage = {
         _id: Date.now(),
         from: currentUser,
@@ -123,7 +124,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
 
       setMessages(prev => [...prev, tempMessage])
 
-      // Enviar mensaje
+      // Send message
       const savedMessage = await sendMessage(targetUser, {
         messageType: uploadedFile.messageType,
         fileUrl: uploadedFile.url,
@@ -132,7 +133,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
         mimeType: uploadedFile.mimeType
       })
 
-      // Reemplazar mensaje temporal con el guardado
+      // Replace temporary message with saved one
       setMessages(prev =>
         prev.map(msg => msg._id === tempMessage._id ? { ...savedMessage, temp: false } : msg)
       )
@@ -141,8 +142,8 @@ const ChatWindow = ({ currentUser, targetUser }) => {
       fileInputRef.current.value = ''
 
     } catch (err) {
-      console.error('Error al enviar archivo:', err)
-      setError(err.message || 'Error al enviar archivo')
+      console.error('Error sending file:', err)
+      setError(err.message || 'Error sending file')
       setSelectedFile(null)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -154,7 +155,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
 
   const handleLocationShare = () => {
     if (!navigator.geolocation) {
-      setError('Tu navegador no soporta geolocalización')
+      setError('Your browser does not support geolocation')
       return
     }
 
@@ -164,7 +165,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
         try {
           const { latitude, longitude } = position.coords
 
-          // Obtener dirección aproximada usando API de reverse geocoding (opcional)
+          // Get approximate address using reverse geocoding API (optional)
           const address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
 
           const tempMessage = {
@@ -191,15 +192,15 @@ const ChatWindow = ({ currentUser, targetUser }) => {
           )
 
         } catch (err) {
-          console.error('Error al enviar ubicación:', err)
-          setError(err.message || 'Error al enviar ubicación')
+          console.error('Error sending location:', err)
+          setError(err.message || 'Error sending location')
         } finally {
           setUploading(false)
         }
       },
       (error) => {
-        console.error('Error de geolocalización:', error)
-        setError('No se pudo obtener tu ubicación')
+        console.error('Geolocation error:', error)
+        setError('Could not get your location')
         setUploading(false)
       }
     )
@@ -242,13 +243,13 @@ const ChatWindow = ({ currentUser, targetUser }) => {
       case 'location':
         return (
           <div className="message-media">
-            <p>📍 Ubicación compartida</p>
+            <p>📍 Shared location</p>
             <a
               href={`https://www.google.com/maps?q=${msg.location.latitude},${msg.location.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              Ver en Google Maps
+              View on Google Maps
             </a>
             <span className="message-time">{formatTime(msg.timestamp)}</span>
           </div>
@@ -279,11 +280,11 @@ const ChatWindow = ({ currentUser, targetUser }) => {
 
       <div className="messages-container">
         {loading ? (
-          <div className="loading">Cargando mensajes...</div>
+          <div className="loading">Loading messages...</div>
         ) : messages.length === 0 ? (
           <div className="no-messages">
-            <p>No hay mensajes aún</p>
-            <small>Sé el primero en enviar un mensaje 👋</small>
+            <p>No messages yet</p>
+            <small>Be the first to send a message 👋</small>
           </div>
         ) : (
           messages.map((msg) => (
@@ -311,7 +312,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
           className="action-btn"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          title="Adjuntar archivo"
+          title="Attach file"
         >
           📎
         </button>
@@ -320,7 +321,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
           className="action-btn"
           onClick={handleLocationShare}
           disabled={uploading}
-          title="Compartir ubicación"
+          title="Share location"
         >
           📍
         </button>
@@ -328,7 +329,7 @@ const ChatWindow = ({ currentUser, targetUser }) => {
           type="button"
           className="action-btn"
           onClick={() => window.open('https://calendar.google.com/calendar/u/0/r/eventedit', '_blank')}
-          title="Crear evento de calendario"
+          title="Create calendar event"
         >
           📅
         </button>
@@ -346,13 +347,13 @@ const ChatWindow = ({ currentUser, targetUser }) => {
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder={uploading ? 'Subiendo archivo...' : 'Mensaje para ' + targetUser + '...'}
+          placeholder={uploading ? 'Uploading file...' : 'Message for ' + targetUser + '...'}
           maxLength={1000}
           autoFocus
           disabled={uploading}
         />
         <button type="submit" disabled={!newMessage.trim() || uploading}>
-          Enviar
+          Send
         </button>
       </form>
     </div>

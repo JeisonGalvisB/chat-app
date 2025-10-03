@@ -7,14 +7,14 @@ const UserList = ({ users, selectedUser, onSelectUser }) => {
   return (
     <div className="user-list">
       <div className="user-list-header">
-        <h3>Usuarios Online</h3>
+        <h3>Online Users</h3>
         <span className="user-count">{users.length}</span>
       </div>
 
       <div className="users">
         {users.length === 0 ? (
           <div className="no-users">
-            <p>No hay otros usuarios conectados</p>
+            <p>No other users connected</p>
           </div>
         ) : (
           users.map((user) => {
@@ -33,7 +33,7 @@ const UserList = ({ users, selectedUser, onSelectUser }) => {
                   <span className="user-name">{user}</span>
                   {hasUnread ? (
                     <span className="new-message-alert">
-                      🔔 NUEVO MENSAJE
+                      🔔 NEW MESSAGE
                     </span>
                   ) : (
                     <span className="user-status">🟢 Online</span>

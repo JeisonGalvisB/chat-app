@@ -6,14 +6,14 @@ const router = express.Router();
 
 /**
  * POST /api/upload
- * Subir un archivo (imagen, audio o documento)
+ * Upload a file (image, audio or document)
  */
 router.post('/', upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                error: 'No se proporcionó ningún archivo'
+                error: 'No file was provided'
             });
         }
 
@@ -26,7 +26,7 @@ router.post('/', upload.single('file'), (req, res) => {
             messageType = 'audio';
         }
 
-        // Construir URL del archivo
+        // Build file URL
         const fileUrl = `/uploads/${path.basename(path.dirname(req.file.path))}/${req.file.filename}`;
 
         res.json({
@@ -41,30 +41,30 @@ router.post('/', upload.single('file'), (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error al subir archivo:', error);
+        console.error('Error uploading file:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al subir el archivo'
+            error: 'Error uploading file'
         });
     }
 });
 
 /**
- * Manejo de errores de multer
+ * Multer error handling
  */
 router.use((error, req, res, next) => {
     if (error instanceof multer.MulterError) {
         if (error.code === 'LIMIT_FILE_SIZE') {
             return res.status(400).json({
                 success: false,
-                error: 'El archivo es demasiado grande (máximo 10MB)'
+                error: 'File is too large (maximum 10MB)'
             });
         }
     }
 
     return res.status(400).json({
         success: false,
-        error: error.message || 'Error al procesar el archivo'
+        error: error.message || 'Error processing file'
     });
 });
 

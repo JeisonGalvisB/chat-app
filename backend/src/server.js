@@ -14,14 +14,14 @@ import uploadRoutes from './routes/uploadRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Cargar variables de entorno
+// Load environment variables
 dotenv.config();
 
-// Crear app Express
+// Create Express app
 const app = express();
 const httpServer = createServer(app);
 
-// Configurar Socket.IO
+// Configure Socket.IO
 const io = new Server(httpServer, {
     cors: {
         origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -42,14 +42,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos (uploads)
+// Serve static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ========================================
-// RUTAS
+// ROUTES
 // ========================================
 
-// Upload de archivos
+// File upload
 app.use('/api/upload', uploadRoutes);
 
 // Health check
@@ -62,7 +62,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Debug: Ver usuarios conectados (solo desarrollo)
+// Debug: View connected users (development only)
 if (process.env.NODE_ENV === 'development') {
     app.get('/api/debug/users', (req, res) => {
         res.json({
@@ -72,62 +72,62 @@ if (process.env.NODE_ENV === 'development') {
     });
 }
 
-// Ruta raíz
+// Root route
 app.get('/', (req, res) => {
     res.json({
         message: 'Chat Backend API',
         version: '1.0.0',
-        socketIO: 'activo'
+        socketIO: 'active'
     });
 });
 
 // ========================================
-// MANEJO DE ERRORES
+// ERROR HANDLING
 // ========================================
 app.use(notFound);
 app.use(errorHandler);
 
 // ========================================
-// INICIALIZACIÓN
+// INITIALIZATION
 // ========================================
 const PORT = process.env.PORT || 3001;
 
 async function startServer() {
     try {
-        // Conectar a MongoDB
+        // Connect to MongoDB
         await connectDB();
 
-        // Limpiar usuarios offline al iniciar (evita problemas de reconexión)
+        // Clean up offline users on startup (prevents reconnection issues)
         await userService.cleanupOfflineUsers();
 
-        // Inicializar Socket.IO
+        // Initialize Socket.IO
         initializeSocket(io);
 
-        // Iniciar servidor
+        // Start server
         httpServer.listen(PORT, () => {
             console.log('');
             console.log('='.repeat(50));
-            console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-            console.log(`🌍 Ambiente: ${process.env.NODE_ENV}`);
-            console.log(`🔌 Socket.IO listo para conexiones`);
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+            console.log(`🔌 Socket.IO ready for connections`);
             console.log('='.repeat(50));
             console.log('');
         });
 
     } catch (error) {
-        console.error('❌ Error al iniciar servidor:', error);
+        console.error('❌ Error starting server:', error);
         process.exit(1);
     }
 }
 
-// Manejo de cierre graceful
+// Graceful shutdown handling
 process.on('SIGTERM', () => {
-    console.log('👋 SIGTERM recibido, cerrando servidor...');
+    console.log('👋 SIGTERM received, closing server...');
     httpServer.close(() => {
-        console.log('✅ Servidor cerrado correctamente');
+        console.log('✅ Server closed successfully');
         process.exit(0);
     });
 });
 
-// Iniciar servidor
+// Start server
 startServer();
